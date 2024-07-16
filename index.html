@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TON Honeypot Detector</title>
+    <script type="module" src="/src/main.ts"></script>
+    <link rel="stylesheet" href="/src/style.css">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Advent+Pro:ital,wght@0,100..900;1,100..900&display=swap');
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>
+        TON
+        <span class="text-primary">HONEYPOT</span>
+        DETECTOR
+      </h1>
+      <div class="text-2xl">JETTON ADDRESS</div>
+      <form id="hp_form">
+        <input type="text" id="address" name="address" autocomplete="off">
+        <button type="button" id="check">CHECK FOR HONEYPOT</button>
+      </form>
+      <div id="summary">
+        <div id="result">SAFE</div>
+        <div id="details">
+          <div id="jname"></div>
+          <ul id="steps">
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

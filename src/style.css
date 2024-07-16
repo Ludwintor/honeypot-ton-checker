@@ -1,0 +1,135 @@
+* {
+  font-family: Advent Pro, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+:root {
+  --fg-primary: #fff;
+  --bg-primary: #0f1621;
+  --bg-secondary: #1a293f;
+  --accent: #0287cf;
+
+  color-scheme: light dark;
+  color: var(--fg-primary);
+  background-color: var(--bg-primary);
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+}
+
+span {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+h2, h3, h4, p {
+  margin: 0;
+}
+
+h4 {
+  padding-bottom: .5rem;
+}
+
+#app {
+  display: block;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  width: 100%;
+  max-width: 52rem;
+  text-align: center;
+}
+
+#hp_form {
+  width: 100%;
+  margin: 1rem auto;
+}
+
+#address {
+  width: 100%;
+  background-color: #ffffff00;
+  border: 5px solid var(--bg-secondary);
+  border-radius: 7px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  outline: none;
+  font-size: 1.25rem;
+  text-align: center;
+}
+
+#check {
+  width: 100%;
+  height: 3.5rem;
+  background-color: var(--accent);
+  border-radius: 7px;
+  border: none;
+  font-size: 1.5rem;
+}
+
+#summary {
+  display: none;
+  width: 100%;
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+#result {
+  padding: 0.75rem 0;
+  font-size: 2.25rem;
+}
+
+#details {
+  background-color: var(--bg-secondary);
+  padding: 1rem;
+}
+
+#jname {
+  font-size: 3rem;
+  padding-bottom: 1.5rem;
+}
+
+#steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  list-style: none;
+  text-align: left;
+  margin: 0 auto;
+  padding: 0;
+}
+
+#steps > li {
+  border-left-width: 9px;
+  border-left-style: solid;
+  font-size: 1.5rem;
+  padding-left: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.text-primary {
+  color: var(--accent);
+}
+
+.text-m {
+  font-size: 1.25rem;
+}
+
+.text-l {
+  font-size: 1.5rem;
+}
+
+.text-xl {
+  font-size: 1.75rem;
+}
+
+.text-2xl {
+  font-size: 2rem;
+}
