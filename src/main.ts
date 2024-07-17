@@ -48,7 +48,7 @@ checkBtn.addEventListener("click", async () => {
     const url = new URL(window.location.href);
     url.searchParams.set("address", address);
     history.pushState(null, "", url);
-    checkHoneypot(Address.parse(address));
+    runHoneypotDetector(Address.parse(address));
 });
 
 const params = new URLSearchParams(window.location.search);
@@ -57,44 +57,54 @@ const queryAddress = params.get("address");
 if (queryAddress !== null && (Address.isFriendly(queryAddress) || Address.isRaw(queryAddress))) {
     const address = Address.parse(queryAddress);
     addressInput.value = queryAddress;
-    checkHoneypot(address);
+    runHoneypotDetector(address);
 }
 
-function checkHoneypot(address: Address) {
+function runHoneypotDetector(address: Address) {
+    checkBtn.disabled = true;
+    checkHoneypot(address).finally(() => {
+        checkBtn.disabled = false;
+    });
+}
+
+async function checkHoneypot(address: Address) {
+    checkBtn.disabled = true;
     summaryContainer.style.display = "block";
     resultContainer.textContent = "PENDING...";
     resultContainer.style.backgroundColor = headerColors[Risk.UNKNOWN];
     jettonLabel.textContent = "";
     const steps: Step[] = [];
-    (async () => {
-	const result = await checkForHoneypot(address);
-	let summary: Risk | null = null;
-	jettonLabel.textContent = `${result.name} - $${result.symbol}`;
-	steps.push({
-	    title: result.knownMaster ? "STANDARD MASTER" : "NON-STANDARD MASTER",
-	    description: result.knownMaster ? "THIS CONTRACT USES COMMUNITY-VALIDATED CODE" 
-		    : "THIS CONTRACT CONTAINS CUSTOM CODE. PROCEED WITH CAUTION",
-	    risk: result.knownMaster ? Risk.LOW : Risk.MEDIUM
-	});
-	
-	steps.push({
-	    title: result.knownWallet ? "STANDARD WALLET" : "NON-STANDARD WALLET",
-	    description: result.knownWallet ? "THIS JETTON WALLET CONTRACT USES COMMUNITY-VALIDATED CODE"
-		    : "THIS JETTON WALLET CONTRACT CONTAINS CUSTOM CODE. PROCEED WITH CAUTION",
-	    risk: result.knownWallet ? Risk.LOW : Risk.MEDIUM
-	});
+    const result = await checkForHoneypot(address);
+    let summary: Risk | null = null;
+    let summaryText: string | null = null;
+    jettonLabel.textContent = `${result.name} - $${result.symbol}`;
+    steps.push({
+        title: result.knownMaster ? "STANDARD MASTER" : "NON-STANDARD MASTER",
+        description: result.knownMaster ? "THIS CONTRACT USES COMMUNITY-VALIDATED CODE" 
+            : "THIS CONTRACT CONTAINS CUSTOM CODE. PROCEED WITH CAUTION",
+        risk: result.knownMaster ? Risk.LOW : Risk.MEDIUM
+    });
+    
+    steps.push({
+        title: result.knownWallet ? "STANDARD WALLET" : "NON-STANDARD WALLET",
+        description: result.knownWallet ? "THIS JETTON WALLET CONTRACT USES COMMUNITY-VALIDATED CODE"
+            : "THIS JETTON WALLET CONTRACT CONTAINS CUSTOM CODE. PROCEED WITH CAUTION",
+        risk: result.knownWallet ? Risk.LOW : Risk.MEDIUM
+    });
 
-	if (result.simulation !== null)
-	    mapSimulation(steps, result.simulation);
-	else
-	    summary = Risk.UNKNOWN;
+    if (result.simulation !== null) {
+        mapSimulation(steps, result.simulation);
+    }
+    else {
+        summary = Risk.UNKNOWN;
+        summaryText = `POOL ${result.symbol}/TON NOT FOUND`;
+    }
 
-	summary ??= steps.reduce<Risk>((max, cur) => cur.risk > max ? cur.risk : max, Risk.LOW);
-	resultContainer.textContent = summaryTexts[summary];
-	resultContainer.style.backgroundColor = headerColors[summary];
+    summary ??= steps.reduce<Risk>((max, cur) => cur.risk > max ? cur.risk : max, Risk.LOW);
+    resultContainer.textContent = summaryText ?? summaryTexts[summary];
+    resultContainer.style.backgroundColor = headerColors[summary];
 
-	renderSteps(steps);
-    })()
+    renderSteps(steps);
 }
 
 function mapSimulation(steps: Step[], sim: SimulationResult) {
