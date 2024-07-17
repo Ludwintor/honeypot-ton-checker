@@ -108,7 +108,9 @@ async function simulateTransfer(chain: Blockchain, master: Address,
     if (!allTxsOk(result.transactions))
         return null
 
-    const balance = await getJettonBalance(chain, await getJettonWallet(chain, another.address, master));
+    const anotherJettonWallet = await getJettonWallet(chain, another.address, master);
+    const state = (await chain.getContract(anotherJettonWallet)).accountState;
+    const balance = state?.type === "active" ? await getJettonBalance(chain, anotherJettonWallet) : 0n;
     const loss = calculateLoss(balance, amount);
 
     console.log("Actual transferred:", balance);

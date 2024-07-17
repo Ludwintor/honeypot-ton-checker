@@ -51,6 +51,19 @@ footer {
   margin-bottom: 1rem;
 }
 
+a {
+  font-size: inherit;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition-duration: 500ms;
+}
+
+a:hover {
+  color: white;
+  cursor: pointer;
+  transition-duration: 500ms;
+}
+
 #app {
   flex: 1 0 auto;
   display: block;

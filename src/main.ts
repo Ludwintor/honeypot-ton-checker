@@ -40,16 +40,27 @@ const jettonLabel = document.getElementById("jname") as HTMLDivElement;
 const summaryContainer = document.getElementById("summary") as HTMLDivElement;
 const resultContainer = document.getElementById("result") as HTMLDivElement;
 const stepsContainer = document.getElementById("steps") as HTMLUListElement;
+const donateCopy = document.getElementById("donate") as HTMLAnchorElement;
+let donateCopyTimeout: number;
 
-checkBtn.addEventListener("click", async () => {
+checkBtn.addEventListener("click", () => {
     const address = addressInput.value;
     if (!Address.isFriendly(address) && !Address.isRaw(address))
-	return;
+	    return;
     const url = new URL(window.location.href);
     url.searchParams.set("address", address);
     history.pushState(null, "", url);
     runHoneypotDetector(Address.parse(address));
 });
+
+donateCopy.addEventListener("click", () => {
+    clearTimeout(donateCopyTimeout)
+    navigator.clipboard.writeText("UQA705AUWErQe9Ur56CZz-v6N9J2uw298w-31ZCu475hT8U4");
+    donateCopy.textContent = "WALLET COPIED!";
+    donateCopyTimeout = window.setTimeout(() => {
+        donateCopy.textContent = "Donate";
+    }, 2500);
+})
 
 const params = new URLSearchParams(window.location.search);
 const queryAddress = params.get("address");
@@ -62,7 +73,9 @@ if (queryAddress !== null && (Address.isFriendly(queryAddress) || Address.isRaw(
 
 function runHoneypotDetector(address: Address) {
     checkBtn.disabled = true;
-    checkHoneypot(address).finally(() => {
+    checkHoneypot(address).catch(() =>{
+        resultContainer.textContent = "INVALID JETTON MASTER";
+    }).finally(() => {
         checkBtn.disabled = false;
     });
 }
@@ -73,6 +86,7 @@ async function checkHoneypot(address: Address) {
     resultContainer.textContent = "PENDING...";
     resultContainer.style.backgroundColor = headerColors[Risk.UNKNOWN];
     jettonLabel.textContent = "";
+    stepsContainer.replaceChildren(...[]);
     const steps: Step[] = [];
     const result = await checkForHoneypot(address);
     let summary: Risk | null = null;
