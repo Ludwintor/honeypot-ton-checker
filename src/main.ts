@@ -73,8 +73,9 @@ if (queryAddress !== null && (Address.isFriendly(queryAddress) || Address.isRaw(
 
 function runHoneypotDetector(address: Address) {
     checkBtn.disabled = true;
-    checkHoneypot(address).catch(() =>{
+    checkHoneypot(address).catch(e =>{
         resultContainer.textContent = "INVALID JETTON MASTER";
+        console.error(e);
     }).finally(() => {
         checkBtn.disabled = false;
     });

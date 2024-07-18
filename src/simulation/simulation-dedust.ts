@@ -2,7 +2,7 @@ import { Factory, MAINNET_FACTORY_ADDR, ReadinessStatus, Asset, PoolType, VaultJ
 import { Address, SendMode, Slice, toNano, Transaction } from "@ton/core";
 import { Blockchain, SandboxContract, TreasuryContract, printTransactionFees } from "@ton/sandbox";
 import { SimulationResult, StageResult } from "./simulation";
-import { allTxsOk, createTransferBody, difference as calculateLoss, getJettonBalance, getJettonWallet } from "./simulation-utils";
+import { allTxsOk, createTransferBody, calculateLoss, getJettonBalance, getJettonWallet } from "./simulation-utils";
 
 export async function sinulateDedust(chain: Blockchain, master: Address, simulator: SandboxContract<TreasuryContract>,
     jettonWallet: Address, buyAmount: bigint): Promise<SimulationResult | null> {
@@ -16,12 +16,21 @@ export async function sinulateDedust(chain: Blockchain, master: Address, simulat
     const jettonAsset = Asset.jetton(master);
 
     const pool = chain.openContract(await factory.getPool(PoolType.VOLATILE, [tonAsset, jettonAsset]));
+    console.log("Pool:", pool.address.toString());
     if ((await pool.getReadinessStatus()) !== ReadinessStatus.READY)
         return null;
     const estimatedBuy = await pool.getEstimatedSwapOut({
         assetIn: tonAsset,
         amountIn: buyAmount
     });
+    // TODO: Probably better say that we got nothing?
+    if (estimatedBuy.amountOut === 0n) {
+        return {
+            transfer: null,
+            buy: null,
+            sell: null
+        };
+    }
 
     let result = await tonVault.sendSwap(simulator.getSender(), {
         queryId: 0,

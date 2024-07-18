@@ -3,7 +3,7 @@ import { Blockchain } from "@ton/sandbox";
 
 const PERCENT_PRECISION = 10000n;
 
-export function difference(current: bigint, expected: bigint): number {
+export function calculateLoss(current: bigint, expected: bigint): number {
     const ratio = Number(current * PERCENT_PRECISION / expected) / Number(PERCENT_PRECISION);
     return Math.abs(Math.min(ratio, 1) - 1);
 }
