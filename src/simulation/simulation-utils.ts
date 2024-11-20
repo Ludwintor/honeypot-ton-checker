@@ -4,11 +4,13 @@ import { Blockchain } from "@ton/sandbox";
 const PERCENT_PRECISION = 10000n;
 
 export function calculateLoss(current: bigint, expected: bigint): number {
+    if (expected === 0n)
+        return 1;
     const ratio = Number(current * PERCENT_PRECISION / expected) / Number(PERCENT_PRECISION);
     return Math.abs(Math.min(ratio, 1) - 1);
 }
 
-export function createTransferBody(amount: bigint, dest: Address, resp: Address,
+export function createTransferBody(amount: bigint, dest: Address, resp: Address | null,
         forwardAmount: bigint, payload: Cell | null): Cell {
     return beginCell()
         .storeUint(0xf8a7ea5, 32)
@@ -31,7 +33,7 @@ export async function getJettonWallet(chain: Blockchain, owner: Address, master:
 
 export async function getJettonBalance(chain: Blockchain, jettonWallet: Address) {
     const result = await chain.runGetMethod(jettonWallet, "get_wallet_data");
-    return result.stackReader.readBigNumber();
+    return result.exitCode === 0 ? result.stackReader.readBigNumber() : 0n;
 }
 
 // TODO: check action opcodes??

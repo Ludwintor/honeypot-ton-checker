@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TON Honeypot Detector</title>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/src/index.ts"></script>
     <link rel="stylesheet" href="/src/style.css">
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Advent+Pro:ital,wght@0,100..900;1,100..900&display=swap');
@@ -23,6 +23,12 @@
         <input type="text" id="address" name="address" autocomplete="off">
         <button type="button" id="check">CHECK FOR HONEYPOT</button>
       </form>
+      <div id="pools">
+        <div id="pools-selected" class="arrow-up">
+        </div>
+        <ul id="pools-list">
+        </ul>
+      </div>
       <div id="summary">
         <div id="result">SAFE</div>
         <div id="details">
@@ -36,10 +42,12 @@
         THIS IS NOT A FOOLPROOF METHOD. ALWAYS DYOR BEFORE SENDING YOUR FUNDS
       </div>
       <div id="limitations">
-        <div class="text-l">LIMITATIONS</div>
+        <div class="text-l">FEATURES</div>
         <ul class="text-m">
-          <li>ONLY DEDUST POOLS SUPPROTED</li>
+          <li>DEDUST AND STONFI (ONLY V1) POOLS SUPPORTED</li>
           <li>ONLY PAIRS WITH TON SUPPORTED</li>
+          <li>BUY, TRANSFER, SELL SIMULATIONS</li>
+          <li>DETECTS FEES ON OPERATIONS WITH JETTON</li>
         </ul>
       </div>
     </div>

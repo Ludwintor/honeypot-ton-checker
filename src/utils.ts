@@ -1,11 +1,12 @@
 import { Address, Cell, Dictionary } from "@ton/core";
 import { sha256 } from "@ton/crypto";
 import { TonClient } from "@ton/ton";
+import { JettonInfo } from "./types";
 
 const ONCHAIN_FLAG = 0x00;
 const OFFCHAIN_FLAG = 0x01;
 
-export async function getJettonData(client: TonClient, address: Address): Promise<JettonData> {
+export async function getJettonInfo(client: TonClient, address: Address): Promise<JettonInfo> {
     const stack = (await client.runMethod(address, "get_jetton_data")).stack;
     const supply = stack.readBigNumber();
     stack.skip(1);
@@ -28,22 +29,13 @@ export async function getJettonData(client: TonClient, address: Address): Promis
             decimals: meta["decimals"]
         };
     }
-
     return {
+        address: address,
         ...parsedContent,
-        supply: supply,
         admin: admin,
+        supply: supply,
         walletCode: jettonWalletCode
     }
-}
-
-export interface JettonData {
-    name: string;
-    symbol: string;
-    decimals: number;
-    admin: Address | null;
-    supply: bigint;
-    walletCode: Cell;
 }
 
 async function parseContent(content: Cell): Promise<JettonContent> {

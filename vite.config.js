@@ -3,6 +3,7 @@ import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 export default defineConfig({
     build: {
+        target: "es2022",
         chunkSizeWarningLimit: 10000,
         rollupOptions: {
             output: {
