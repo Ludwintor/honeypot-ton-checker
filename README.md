@@ -21,3 +21,25 @@ Go to http://localhost:4173
 - [ ] Optimize simulation performance
 - [ ] Add support for JETTON/JETTON pairs
 - [ ] Provide more info about simulated pool
+
+## Buy me a coffee
+
+### TON
+```
+UQA705AUWErQe9Ur56CZz-v6N9J2uw298w-31ZCu475hT8U4
+```
+
+### Tron
+```
+TEHvFyCMSQSGsKg1TVGCcCiDXr1DMs4MTe
+```
+
+### ETH, BSC
+```
+0x95Ba8e4FeC184Ef983a89B020E6399Fa01E53bA3
+```
+
+### BTC
+```
+bc1q9czr3qmypd6xvt7m5c8lnnfh4e5ra6ppkjp78s
+```
