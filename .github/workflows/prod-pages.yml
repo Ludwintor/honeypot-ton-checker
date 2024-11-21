@@ -30,8 +30,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Build
         run: |
-          npm i --force
-          npm run build -- --base=/honeypot-ton-checker
+          npm ci
+          npm run build -- --base=/${{ github.event.repository.name }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
