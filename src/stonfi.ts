@@ -9,3 +9,7 @@
 // - feel free to create a PR or issue with explanation so I can do it myself
 export { RouterV1 } from "../node_modules/@ston-fi/sdk/dist/contracts/dex/v1/RouterV1";
 export { PoolV1 } from "../node_modules/@ston-fi/sdk/dist/contracts/dex/v1/PoolV1";
+export { PtonV1 } from "../node_modules/@ston-fi/sdk/dist/contracts/pTON/v1/PtonV1";
+export { RouterV2_2 as RouterV2 } from "../node_modules/@ston-fi/sdk/dist/contracts/dex/v2_2/router/RouterV2_2";
+export { PoolV2_2 as PoolV2 } from "../node_modules/@ston-fi/sdk/dist/contracts/dex/v2_2/pool/PoolV2_2";
+export { PtonV2_1 as PtonV2 } from "../node_modules/@ston-fi/sdk/dist/contracts/pTON/v2_1/PtonV2_1";

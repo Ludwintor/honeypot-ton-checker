@@ -9,7 +9,7 @@ export const enum Dex {
 
 export interface PoolInfo {
     dex: Dex;
-    pairName: string;
+    name: string;
     address: Address;
     reservesUsd: number;
 }
@@ -21,7 +21,5 @@ export abstract class PoolFinder {
         this.client = client;
     }
 
-    public abstract get dex(): Dex
-
-    public abstract findPool(master: Address): Promise<PoolInfo | null>;
+    public abstract findPools(master: Address): Promise<PoolInfo[]>;
 }

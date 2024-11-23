@@ -3,15 +3,13 @@ import { TonClient, TonClient4 } from "@ton/ton";
 import { getHttpEndpoint, getHttpV4Endpoint } from "@orbs-network/ton-access";
 import { Blockchain, RemoteBlockchainStorage, wrapTonClient4ForRemote } from "@ton/sandbox";
 import { JettonInfo, Risk, Step } from "./types";
-import { DedustPoolFinder, Dex, PoolFinder, PoolInfo, StonfiV1PoolFinder } from "./dex";
-import { Simulation, DedustSimulation, StonfiV1Simulation, SimulationResult, StageResult } from "./simulation";
+import { DedustPoolFinder, StonfiPoolFinder, Dex, PoolFinder, PoolInfo } from "./dex";
+import { Simulation, DedustSimulation, StonfiV1Simulation, SimulationResult, StageResult, StonfiV2Simulation } from "./simulation";
 import { Dropdown } from "./dropdown";
 import { isKnownWallet } from "./known-contracts";
 import { getJettonInfo } from "./utils";
 import assert from "assert";
 
-// HUGE TODO: fetch pools and jetton code in sandbox too. It will be much faster
-// TODO: extract whole dropdown to separate class
 const CURRENCY_FORMAT = Intl.NumberFormat("en-US", {
     notation: "compact",
     maximumFractionDigits: 1
@@ -41,12 +39,6 @@ const summaryTexts = {
     [Risk.UNKNOWN]: "UNABLE TO PERFORM ALL CHECKS"
 }
 
-const dexNames = {
-    [Dex.DEDUST]: "DEDUST",
-    [Dex.STONFI_V1]: "STON.FI V1",
-    [Dex.STONFI_V2]: "STON.FI V2",
-}
-
 const client = new TonClient({
     endpoint: await getHttpEndpoint({ network: "mainnet" })
 });
@@ -60,7 +52,7 @@ const chain = await Blockchain.create({
 });
 const poolFinders: PoolFinder[] = [
     DedustPoolFinder.create(client),
-    StonfiV1PoolFinder.create(client)
+    StonfiPoolFinder.create(client)
 ];
 let masterInfo: JettonInfo | null = null;
 let pools: PoolInfo[] | null = null;
@@ -110,8 +102,10 @@ function getSimulation(chain: Blockchain, dex: Dex, master: Address, pool: Addre
             return DedustSimulation.create(chain, master, pool, amount);
         case Dex.STONFI_V1:
             return StonfiV1Simulation.create(chain, master, pool, amount);
+        case Dex.STONFI_V2:
+            return StonfiV2Simulation.create(chain, master, pool, amount);
         default:
-            throw new Error(`${dexNames[dex]} dex isn't supported`);
+            throw new Error(`${dex} dex isn't supported`);
     }
 }
 
@@ -128,17 +122,18 @@ async function checkAddress(address: Address) {
             jettonLabel.textContent = "";
             poolsDropdown.clearItems();
             masterInfo = await getJettonInfo(client, address);
-            const poolTasks = await Promise.all(poolFinders.map(x => x.findPool(address)));
-            pools = poolTasks.filter(x => x !== null).sort((a, b) => b.reservesUsd - a.reservesUsd);
+            const poolTasks = await Promise.all(poolFinders.map(x => x.findPools(address)));
+            pools = poolTasks.flat()
+                .filter(x => x !== null)
+                .sort((a, b) => b.reservesUsd - a.reservesUsd);
             jettonLabel.textContent = `${masterInfo.name} - ${masterInfo.symbol}`;
             if (pools.length === 0) {
                 resultContainer.textContent = "NO POOLS FOUND";
                 return;
             }
             const items = pools.map(pool => {
-                const dexName = dexNames[pool.dex];
                 const liquidity = CURRENCY_FORMAT.format(pool.reservesUsd);
-                return `${dexName}: ${pool.pairName} (Liquidity: $${liquidity})`;
+                return `${pool.name} (Liquidity: $${liquidity})`;
             });
             poolsDropdown.setupItems(items, async selected => {
                 if (!masterInfo || !pools)

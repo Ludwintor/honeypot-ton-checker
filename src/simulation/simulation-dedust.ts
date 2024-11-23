@@ -1,7 +1,7 @@
 import { VaultJetton, Pool, VaultNative, Factory, MAINNET_FACTORY_ADDR, Asset, ReadinessStatus } from "@dedust/sdk";
-import { Address, Cell, Dictionary, SendMode, Slice, toNano, Transaction } from "@ton/core";
+import { Address, SendMode, Slice, toNano, Transaction } from "@ton/core";
 import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { createTransferBody, getJettonBalance } from "./simulation-utils";
+import { createJettonTransferBody, getJettonBalance } from "./simulation-utils";
 import { Simulation, StageSimulationInfo } from "./simulation";
 
 export class DedustSimulation extends Simulation {
@@ -44,10 +44,6 @@ export class DedustSimulation extends Simulation {
         );
     }
 
-    protected setupLibs(_libs: Dictionary<Buffer, Cell>): Promise<void> {
-        return Promise.resolve();
-    }
-
     protected async simulateBuy(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address)
         : Promise<StageSimulationInfo | null> {
         const estimate = await this.pool.getEstimatedSwapOut({
@@ -82,10 +78,13 @@ export class DedustSimulation extends Simulation {
             to: jettonWallet,
             value: toNano(0.3),
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: createTransferBody(
-                balance, this.vaultOut.address,
-                treasury.address, toNano(0.25), payload
-            )
+            body: createJettonTransferBody({
+                amount: balance,
+                destination: this.vaultOut.address,
+                response: treasury.address,
+                forwardAmount: toNano(0.25),
+                payload: payload
+            })
         });
 
         const actualPayout = DedustSimulation.getActualPayout(result.transactions, this.pool.address);

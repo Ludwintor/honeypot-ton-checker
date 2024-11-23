@@ -1,7 +1,7 @@
 import { Address, beginCell, BitReader, Cell, CellType, Dictionary, SendMode, toNano } from "@ton/core";
 import { Blockchain, BlockchainTransaction, printTransactionFees, SandboxContract, TreasuryContract } from "@ton/sandbox";
 import { request, gql } from "graphql-request";
-import { allTxsOk, calculateLoss, createTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
+import { allTxsOk, calculateLoss, createJettonTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
 
 const DTON_ENDPOINT = "https://dton.io/graphql/";
 
@@ -34,7 +34,7 @@ export abstract class Simulation {
         const treasury = await this.chain.treasury("simulation");
         console.log("Treasury:", treasury.address.toString());
         const jettonWallet = await getJettonWallet(this.chain, treasury.address, this.master);
-        await this.setupLibsInternal();
+        await this.setupLib();
 
         let buy: StageResult | null = null;
         let transfer: StageResult | null = null;
@@ -61,11 +61,6 @@ export abstract class Simulation {
     }
 
     /**
-     * Add libraries to blockchain before any simulations
-     */
-    protected abstract setupLibs(libs: Dictionary<Buffer, Cell>): Promise<void>;
-
-    /**
      * Simulates jetton buy. Changes persist for next transfer stage
      */
     protected abstract simulateBuy(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address)
@@ -78,12 +73,18 @@ export abstract class Simulation {
     protected async simulateTransfer(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address)
         : Promise<StageSimulationInfo | null> {
         const another = await this.chain.treasury("another");
+        console.log("ANOTHER:", another.address.toString());
         const sendAmount = await getJettonBalance(this.chain, jettonWallet);
         const result = await treasury.send({
             to: jettonWallet,
             value: toNano(0.06),
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: createTransferBody(sendAmount, another.address, treasury.address, 1n, null)
+            body: createJettonTransferBody({
+                amount: sendAmount, 
+                destination: another.address, 
+                response: treasury.address, 
+                forwardAmount: 1n
+            })
         });
 
         const anotherJettonWallet = await getJettonWallet(this.chain, another.address, this.master);
@@ -101,7 +102,7 @@ export abstract class Simulation {
     protected abstract simulateSell(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address)
         : Promise<StageSimulationInfo | null>;
 
-    private async setupLibsInternal(): Promise<void> {
+    private async setupLib(): Promise<void> {
         const stack = (await this.chain.runGetMethod(this.master, "get_jetton_data")).stack;
         if (stack.length < 5)
             throw new Error("Can't find code in jetton master data");
@@ -123,7 +124,6 @@ export abstract class Simulation {
                 libs.set(libHash, lib);
             }
         }
-        await this.setupLibs(libs);
         this.chain.libs = beginCell().storeDictDirect(libs).endCell();
     }
 

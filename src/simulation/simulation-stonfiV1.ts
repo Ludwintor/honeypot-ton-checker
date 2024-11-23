@@ -1,36 +1,32 @@
 import { Blockchain, BlockchainTransaction, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { Address, Cell, Dictionary, toNano } from "@ton/core";
-import { PoolV1, RouterV1 } from "../stonfi";
-import { DEX } from "@ston-fi/sdk";
-import { createTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
+import { Address, toNano } from "@ton/core";
+import { PoolV1, PtonV1, RouterV1 } from "../stonfi";
+import { createJettonTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
 import { Simulation, StageSimulationInfo } from "./simulation";
 
-const pTON = new DEX.v1.pTON();
 const FORWARD_FEE = toNano(0.25);
 
 export class StonfiV1Simulation extends Simulation {
     private readonly router: RouterV1;
-    private readonly routerPTONWalletIn: Address;
-    private readonly routerJettonWalletOut: Address;
+    private readonly walletIn: Address;
+    private readonly walletOut: Address;
     private readonly pool: SandboxContract<PoolV1>;
     private readonly amountIn: bigint;
 
-    private constructor(chain: Blockchain, master: Address, router: RouterV1, routerPTONWalletIn: Address,
-        routerJettonWalletOut: Address, pool: SandboxContract<PoolV1>, amountIn: bigint
+    private constructor(chain: Blockchain, master: Address, router: RouterV1, walletIn: Address,
+        walletOut: Address, pool: SandboxContract<PoolV1>, amountIn: bigint
     ) {
         super(chain, master);
         this.router = router
-        this.routerPTONWalletIn = routerPTONWalletIn;
-        this.routerJettonWalletOut = routerJettonWalletOut;
+        this.walletIn = walletIn;
+        this.walletOut = walletOut;
         this.pool = pool;
         this.amountIn = amountIn;
     }
 
     public static async create(chain: Blockchain, master: Address, pool: Address, amountIn: bigint): Promise<StonfiV1Simulation> {
-        if ((await chain.getContract(pool)).accountState?.type !== "active")
-            throw new Error("Pool is not active");
         const router = new RouterV1();
-        const walletIn = await getJettonWallet(chain, router.address, pTON.address);
+        const walletIn = await getJettonWallet(chain, router.address, PtonV1.address);
         const walletOut = await getJettonWallet(chain, router.address, master);
         const poolContract = chain.openContract(PoolV1.create(pool));
         return new StonfiV1Simulation(chain, master, router, walletIn, 
@@ -38,29 +34,27 @@ export class StonfiV1Simulation extends Simulation {
         );
     }
 
-    protected setupLibs(_libs: Dictionary<Buffer, Cell>): Promise<void> {
-        return Promise.resolve();
-    }
-
     protected async simulateBuy(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address): Promise<StageSimulationInfo | null> {
         const estimate = await this.pool.getExpectedOutputs({
             amount: this.amountIn,
-            jettonWallet: this.routerPTONWalletIn
+            jettonWallet: this.walletIn
         });
 
         const swapPayload = await this.router.createSwapBody({
             userWalletAddress: treasury.address,
             minAskAmount: 0n,
-            askJettonWalletAddress: this.routerJettonWalletOut
+            askJettonWalletAddress: this.walletOut
         });
 
         const result = await treasury.send({
-            to: this.routerPTONWalletIn,
+            to: this.walletIn,
             value: this.amountIn + FORWARD_FEE,
-            body: createTransferBody(
-                this.amountIn, this.router.address, null,
-                FORWARD_FEE, swapPayload
-            )
+            body: createJettonTransferBody({
+                amount: this.amountIn,
+                destination: this.router.address,
+                forwardAmount: FORWARD_FEE,
+                payload: swapPayload
+            })
         });
         const actualBalance = await getJettonBalance(this.chain, jettonWallet);
         return {
@@ -74,25 +68,28 @@ export class StonfiV1Simulation extends Simulation {
         const balance = await getJettonBalance(this.chain, jettonWallet);
         const estimate = await this.pool.getExpectedOutputs({
             amount: balance,
-            jettonWallet: this.routerJettonWalletOut
+            jettonWallet: this.walletOut
         });
 
         const swapPayload = await this.router.createSwapBody({
             userWalletAddress: treasury.address,
             minAskAmount: 0n,
-            askJettonWalletAddress: this.routerPTONWalletIn
+            askJettonWalletAddress: this.walletIn
         });
 
         const result = await treasury.send({
             to: jettonWallet,
             value: toNano(0.06) + FORWARD_FEE,
-            body: createTransferBody(
-                balance, this.router.address, treasury.address,
-                FORWARD_FEE, swapPayload
-            )
+            body: createJettonTransferBody({
+                amount: balance,
+                destination: this.router.address,
+                response: treasury.address,
+                forwardAmount: FORWARD_FEE,
+                payload: swapPayload
+            })
         });
         const actualPayout = StonfiV1Simulation.getActualPayout(result.transactions, 
-            this.pool.address, this.routerPTONWalletIn
+            this.pool.address, this.walletIn
         );
         return {
             transactions: result.transactions,

@@ -1,4 +1,4 @@
-import { Address, beginCell, Cell, Transaction, TupleBuilder } from "@ton/core";
+import { Address, beginCell, Cell, Dictionary, Transaction, TupleBuilder } from "@ton/core";
 import { Blockchain } from "@ton/sandbox";
 
 const PERCENT_PRECISION = 10000n;
@@ -9,18 +9,24 @@ export function calculateLoss(current: bigint, expected: bigint): number {
     const ratio = Number(current * PERCENT_PRECISION / expected) / Number(PERCENT_PRECISION);
     return Math.abs(Math.min(ratio, 1) - 1);
 }
-
-export function createTransferBody(amount: bigint, dest: Address, resp: Address | null,
-        forwardAmount: bigint, payload: Cell | null): Cell {
+export function createJettonTransferBody(
+    params: {
+        amount: bigint,
+        destination: Address,
+        forwardAmount: bigint,
+        payload?: Cell,
+        response?: Address
+    }
+): Cell {
     return beginCell()
         .storeUint(0xf8a7ea5, 32)
         .storeUint(0, 64)
-        .storeCoins(amount)
-        .storeAddress(dest)
-        .storeAddress(resp)
+        .storeCoins(params.amount)
+        .storeAddress(params.destination)
+        .storeAddress(params.response)
         .storeMaybeRef(null)
-        .storeCoins(forwardAmount)
-        .storeMaybeRef(payload)
+        .storeCoins(params.forwardAmount)
+        .storeMaybeRef(params.payload)
         .endCell()
 }
 
@@ -36,6 +42,20 @@ export async function getJettonBalance(chain: Blockchain, jettonWallet: Address)
     return result.exitCode === 0 ? result.stackReader.readBigNumber() : 0n;
 }
 
+const libKey = Dictionary.Keys.Buffer(32);
+const libValue = Dictionary.Values.Cell();
+
+export function addLibs(chain: Blockchain, items: LibItem[]) {
+    const libs = chain.libs?.beginParse().loadDictDirect(libKey, libValue) ??
+        Dictionary.empty(libKey, libValue);
+    const prevLength = libs.size;
+    for (const item of items)
+        if (!libs.has(item.hash))
+            libs.set(item.hash, item.code);
+    if (prevLength !== libs.size)
+        chain.libs = beginCell().storeDictDirect(libs).endCell();
+}
+
 // TODO: check action opcodes??
 export function allTxsOk(transactions: Transaction[]): boolean {
     for (const tx of transactions) {
@@ -45,4 +65,9 @@ export function allTxsOk(transactions: Transaction[]): boolean {
             return false;
     }
     return true;
+}
+
+export interface LibItem {
+    hash: Buffer;
+    code: Cell;
 }

@@ -4,32 +4,28 @@ import { getJettonInfo } from "../utils";
 import { Dex, PoolFinder, PoolInfo } from "./finder";
 
 export class DedustPoolFinder extends PoolFinder {
-    public get dex(): Dex {
-        return Dex.DEDUST;
-    }
-
     public static create(client: TonClient): DedustPoolFinder {
         return new DedustPoolFinder(client);
     }
 
-    public async findPool(master: Address): Promise<PoolInfo | null> {
+    public async findPools(master: Address): Promise<PoolInfo[]> {
         const factory = this.client.open(Factory.createFromAddress(MAINNET_FACTORY_ADDR));
         const vaultJetton = this.client.open(await factory.getJettonVault(master));
         if (await vaultJetton.getReadinessStatus() !== ReadinessStatus.READY)
-            return null;
+            return [];
         const assetNative = Asset.native();
         const assetJetton = Asset.jetton(master);
         const pool = this.client.open(await factory.getPool(PoolType.VOLATILE, [assetNative, assetJetton]));
         if (await pool.getReadinessStatus() !== ReadinessStatus.READY)
-            return null;
+            return [];
         const jettonData = await getJettonInfo(this.client, master);
         const reserves = await DedustPoolFinder.fetchReservesUsd(pool.address);
-        return {
-            dex: this.dex,
-            pairName: `TON/${jettonData.symbol}`,
+        return [{
+            dex: Dex.DEDUST,
+            name: `DEDUST TON/${jettonData.symbol}`,
             address: pool.address,
             reservesUsd: reserves
-        };
+        }];
     }
 
     private static async fetchReservesUsd(pool: Address): Promise<number> {

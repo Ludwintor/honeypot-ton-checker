@@ -13,11 +13,10 @@ npm run preview
 Go to http://localhost:4173
 
 ## Features & Limitations
-- [x] [Dedust](https://dedust.io/) and [Ston.fi](https://app.ston.fi/) (only V1) pools supported
+- [x] [Dedust](https://dedust.io/) and [Ston.fi](https://app.ston.fi/) (V1 and V2) pools supported
 - [x] Only TON/JETTON pairs supported
 - [x] Simulates buy, transfer and sell operations
 - [x] Detects fees on operations with jetton
-- [ ] Add support for [Ston.fi](https://app.ston.fi/) V2 pools
 - [ ] Optimize simulation performance
 - [ ] Add support for JETTON/JETTON pairs
 - [ ] Provide more info about simulated pool

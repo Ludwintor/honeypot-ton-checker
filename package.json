@@ -17,8 +17,8 @@
   "dependencies": {
     "@dedust/sdk": "^0.8.7",
     "@orbs-network/ton-access": "^2.3.3",
-    "@ston-fi/sdk": "^2.0.0-rc.9",
-    "@ton/core": "^0.56.3",
+    "@ston-fi/sdk": "^2.0.0-rc.10",
+    "@ton/core": "^0.59.0",
     "@ton/crypto": "^3.2.0",
     "@ton/sandbox": "^0.20.0",
     "@ton/ton": "^13.11.2",

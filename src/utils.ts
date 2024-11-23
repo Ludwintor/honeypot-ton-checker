@@ -72,6 +72,12 @@ async function parseContent(content: Cell): Promise<JettonContent> {
     throw new Error("Unknown layout format");
 }
 
+export function divCeil(x: bigint, y: bigint): bigint {
+    const q = x / y;
+    const r = x - y * q;
+    return q + (r > 0n ? 1n : 0n);
+}
+
 interface JettonContent {
     name: string;
     symbol: string;
