@@ -73,7 +73,9 @@ export abstract class Simulation {
     protected async simulateTransfer(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address)
         : Promise<StageSimulationInfo | null> {
         const another = await this.chain.treasury("another");
-        console.log("ANOTHER:", another.address.toString());
+        const anotherJettonWallet = await getJettonWallet(this.chain, another.address, this.master);
+        const anotherJWContract = await this.chain.getContract(anotherJettonWallet);
+        const transferSnap = anotherJWContract.snapshot();
         const sendAmount = await getJettonBalance(this.chain, jettonWallet);
         const result = await treasury.send({
             to: jettonWallet,
@@ -87,8 +89,8 @@ export abstract class Simulation {
             })
         });
 
-        const anotherJettonWallet = await getJettonWallet(this.chain, another.address, this.master);
         const balance = await getJettonBalance(this.chain, anotherJettonWallet);
+        anotherJWContract.loadFrom(transferSnap);
         return {
             transactions: result.transactions,
             actualAmount: balance,
