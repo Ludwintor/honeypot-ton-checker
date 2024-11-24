@@ -34,7 +34,7 @@ export abstract class Simulation {
         const treasury = await this.chain.treasury("simulation");
         console.log("Treasury:", treasury.address.toString());
         const jettonWallet = await getJettonWallet(this.chain, treasury.address, this.master);
-        await this.setupLib();
+        await this.addWalletLibrary();
 
         let buy: StageResult | null = null;
         let transfer: StageResult | null = null;
@@ -104,7 +104,7 @@ export abstract class Simulation {
     protected abstract simulateSell(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address)
         : Promise<StageSimulationInfo | null>;
 
-    private async setupLib(): Promise<void> {
+    private async addWalletLibrary(): Promise<void> {
         const stack = (await this.chain.runGetMethod(this.master, "get_jetton_data")).stack;
         if (stack.length < 5)
             throw new Error("Can't find code in jetton master data");
@@ -113,11 +113,11 @@ export abstract class Simulation {
             throw new Error("Can't find code in jetton master data");
         const walletCode = codeItem.cell;
 
-        const key = Dictionary.Keys.Buffer(32);
-        const value = Dictionary.Values.Cell();
-        const libs = this.chain.libs?.beginParse().loadDictDirect(key, value) ??
-            Dictionary.empty(key, value);
         if (walletCode.type == CellType.Library) {
+            const key = Dictionary.Keys.Buffer(32);
+            const value = Dictionary.Values.Cell();
+            const libs = this.chain.libs?.beginParse().loadDictDirect(key, value) ??
+                Dictionary.empty(key, value);
             const br = new BitReader(walletCode.bits);
             br.skip(8);
             const libHash = br.loadBuffer(32);
@@ -125,8 +125,8 @@ export abstract class Simulation {
                 const lib = await getLibrary(libHash);
                 libs.set(libHash, lib);
             }
+            this.chain.libs = beginCell().storeDictDirect(libs).endCell();
         }
-        this.chain.libs = beginCell().storeDictDirect(libs).endCell();
     }
 
     private processStage(info: StageSimulationInfo): StageResult | null {
