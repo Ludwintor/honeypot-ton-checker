@@ -38,8 +38,12 @@ export async function getJettonWallet(chain: Blockchain, owner: Address, master:
 }
 
 export async function getJettonBalance(chain: Blockchain, jettonWallet: Address) {
-    const result = await chain.runGetMethod(jettonWallet, "get_wallet_data");
-    return result.exitCode === 0 ? result.stackReader.readBigNumber() : 0n;
+    try {
+        const result = await chain.runGetMethod(jettonWallet, "get_wallet_data");
+        return result.exitCode === 0 ? result.stackReader.readBigNumber() : 0n;
+    } catch {
+        return 0n;
+    }
 }
 
 const libKey = Dictionary.Keys.Buffer(32);
