@@ -108,7 +108,7 @@ export abstract class Simulation {
         const stack = (await this.chain.runGetMethod(this.master, "get_jetton_data")).stack;
         if (stack.length < 5)
             throw new Error("Can't find code in jetton master data");
-        const codeItem = stack.at(4);
+        const codeItem = stack[4];
         if (codeItem?.type !== "cell")
             throw new Error("Can't find code in jetton master data");
         const walletCode = codeItem.cell;

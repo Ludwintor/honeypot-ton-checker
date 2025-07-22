@@ -1,6 +1,6 @@
 import { Address, toNano } from "@ton/core";
 import { TonClient, TonClient4 } from "@ton/ton";
-import { getHttpEndpoint, getHttpV4Endpoint } from "@orbs-network/ton-access";
+import { getHttpEndpoint } from "@orbs-network/ton-access";
 import { Blockchain, RemoteBlockchainStorage, wrapTonClient4ForRemote } from "@ton/sandbox";
 import { JettonInfo, Risk, Step } from "./types";
 import { DedustPoolFinder, StonfiPoolFinder, Dex, PoolFinder, PoolInfo } from "./dex";
@@ -43,7 +43,7 @@ const client = new TonClient({
     endpoint: await getHttpEndpoint({ network: "mainnet" })
 });
 const clientV4 = new TonClient4({
-    endpoint: await getHttpV4Endpoint({ network: "mainnet" })
+    endpoint: "https://mainnet-v4.tonhubapi.com"
 });
 
 const seqno = (await clientV4.getLastBlock()).last.seqno;
