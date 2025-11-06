@@ -6,9 +6,9 @@ All simulations are run on the client-side but still uses network to fetch contr
 ## Quick start
 
 ```
-npm i
-npm run build
-npm run preview
+pnpm i
+pnpm run build
+pnpm run preview
 ```
 Go to http://localhost:4173
 
