@@ -40,7 +40,7 @@ jobs:
       - name: Build
         run: |
           pnpm i --frozen-lockfile
-          pnpm run build -- --base=/${{ github.event.repository.name }}
+          pnpm run build --base=/${{ github.event.repository.name }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
