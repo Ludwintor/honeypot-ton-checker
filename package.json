@@ -9,20 +9,20 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/node": "^24.0.14",
-    "typescript": "^5.8.3",
-    "vite": "^7.0.4",
+    "@types/node": "^24.10.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.1",
     "vite-plugin-node-polyfills": "^0.24.0"
   },
   "dependencies": {
     "@dedust/sdk": "^0.8.7",
     "@orbs-network/ton-access": "^2.3.3",
-    "@ston-fi/sdk": "^2.5.0",
-    "@ton/core": "^0.61.0",
-    "@ton/crypto": "^3.2.0",
-    "@ton/sandbox": "^0.32.0",
-    "@ton/test-utils": "^0.9.0",
-    "@ton/ton": "^15.3.1",
-    "graphql-request": "^7.1.0"
+    "@ston-fi/sdk": "^2.6.0",
+    "@ton/core": "^0.62.0",
+    "@ton/crypto": "^3.3.0",
+    "@ton/sandbox": "^0.38.0",
+    "@ton/test-utils": "^0.12.0",
+    "@ton/ton": "^16.0.0",
+    "graphql-request": "^7.3.1"
   }
 }

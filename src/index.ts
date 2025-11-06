@@ -8,7 +8,7 @@ import { Simulation, DedustSimulation, StonfiV1Simulation, SimulationResult, Sta
 import { Dropdown } from "./dropdown";
 import { isKnownWallet } from "./known-contracts";
 import { getJettonInfo } from "./utils";
-import assert from "assert";
+import { VoidContractsMeta } from "./meta";
 
 const CURRENCY_FORMAT = Intl.NumberFormat("en-US", {
     notation: "compact",
@@ -48,7 +48,8 @@ const clientV4 = new TonClient4({
 
 const seqno = (await clientV4.getLastBlock()).last.seqno;
 const chain = await Blockchain.create({
-    storage: new RemoteBlockchainStorage(wrapTonClient4ForRemote(clientV4), seqno)
+    storage: new RemoteBlockchainStorage(wrapTonClient4ForRemote(clientV4), seqno),
+    meta: VoidContractsMeta
 });
 const poolFinders: PoolFinder[] = [
     DedustPoolFinder.create(client),
@@ -152,7 +153,8 @@ async function checkAddress(address: Address) {
                 }
             });
         }
-        assert(pools);
+        if (pools == null)
+            throw new Error("we should have pools here");
         const pool = pools[poolsDropdown.selected];
         await checkHoneypot(masterInfo, pool);
     } catch (e: any) {
