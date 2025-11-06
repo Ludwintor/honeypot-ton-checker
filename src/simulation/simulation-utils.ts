@@ -1,4 +1,4 @@
-import { Address, beginCell, Cell, Dictionary, Transaction, TupleBuilder } from "@ton/core";
+import { Address, beginCell, Cell, Dictionary, TupleBuilder } from "@ton/core";
 import { Blockchain } from "@ton/sandbox";
 
 const PERCENT_PRECISION = 10000n;
@@ -58,17 +58,6 @@ export function addLibs(chain: Blockchain, items: LibItem[]) {
             libs.set(item.hash, item.code);
     if (prevLength !== libs.size)
         chain.libs = beginCell().storeDictDirect(libs).endCell();
-}
-
-// TODO: check action opcodes??
-export function allTxsOk(transactions: Transaction[]): boolean {
-    for (const tx of transactions) {
-        if (tx.description.type !== "generic")
-            continue;
-        if (tx.description.computePhase.type === "vm" && tx.description.computePhase.exitCode !== 0)
-            return false;
-    }
-    return true;
 }
 
 export interface LibItem {

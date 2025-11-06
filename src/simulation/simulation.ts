@@ -1,7 +1,7 @@
 import { Address, beginCell, BitReader, Cell, CellType, Dictionary, SendMode, toNano } from "@ton/core";
 import { Blockchain, BlockchainTransaction, printTransactionFees, SandboxContract, TreasuryContract } from "@ton/sandbox";
 import { request, gql } from "graphql-request";
-import { allTxsOk, calculateLoss, createJettonTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
+import { calculateLoss, createJettonTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
 
 const DTON_ENDPOINT = "https://dton.io/graphql/";
 
@@ -131,8 +131,6 @@ export abstract class Simulation {
 
     private processStage(info: StageSimulationInfo): StageResult | null {
         printTransactionFees(info.transactions);
-        if (!allTxsOk(info.transactions))
-            return null;
 
         const loss = calculateLoss(info.actualAmount, info.expectedAmount);
         console.log("Actual amount:", info.actualAmount);
