@@ -18,8 +18,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Build
         run: |
-          npm ci
-          npm run build
+          pnpm i --frozen-lockfile
+          pnpm run build
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
