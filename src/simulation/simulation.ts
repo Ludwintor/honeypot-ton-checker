@@ -1,9 +1,6 @@
-import { Address, beginCell, BitReader, Cell, CellType, Dictionary, SendMode, toNano } from "@ton/core";
+import { Address, SendMode, toNano } from "@ton/core";
 import { Blockchain, BlockchainTransaction, printTransactionFees, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { request, gql } from "graphql-request";
 import { calculateLoss, createJettonTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
-
-const DTON_ENDPOINT = "https://dton.io/graphql/";
 
 export interface StageSimulationInfo {
     transactions: BlockchainTransaction[],
@@ -34,7 +31,6 @@ export abstract class Simulation {
         const treasury = await this.chain.treasury("simulation");
         console.log("Treasury:", treasury.address.toString());
         const jettonWallet = await getJettonWallet(this.chain, treasury.address, this.master);
-        await this.addWalletLibrary();
 
         let buy: StageResult | null = null;
         let transfer: StageResult | null = null;
@@ -82,9 +78,9 @@ export abstract class Simulation {
             value: toNano(0.06),
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: createJettonTransferBody({
-                amount: sendAmount, 
-                destination: another.address, 
-                response: treasury.address, 
+                amount: sendAmount,
+                destination: another.address,
+                response: treasury.address,
                 forwardAmount: 1n
             })
         });
@@ -104,31 +100,6 @@ export abstract class Simulation {
     protected abstract simulateSell(treasury: SandboxContract<TreasuryContract>, jettonWallet: Address)
         : Promise<StageSimulationInfo | null>;
 
-    private async addWalletLibrary(): Promise<void> {
-        const stack = (await this.chain.runGetMethod(this.master, "get_jetton_data")).stack;
-        if (stack.length < 5)
-            throw new Error("Can't find code in jetton master data");
-        const codeItem = stack[4];
-        if (codeItem?.type !== "cell")
-            throw new Error("Can't find code in jetton master data");
-        const walletCode = codeItem.cell;
-
-        if (walletCode.type == CellType.Library) {
-            const key = Dictionary.Keys.Buffer(32);
-            const value = Dictionary.Values.Cell();
-            const libs = this.chain.libs?.beginParse().loadDictDirect(key, value) ??
-                Dictionary.empty(key, value);
-            const br = new BitReader(walletCode.bits);
-            br.skip(8);
-            const libHash = br.loadBuffer(32);
-            if (!libs.has(libHash)) {
-                const lib = await getLibrary(libHash);
-                libs.set(libHash, lib);
-            }
-            this.chain.libs = beginCell().storeDictDirect(libs).endCell();
-        }
-    }
-
     private processStage(info: StageSimulationInfo): StageResult | null {
         printTransactionFees(info.transactions);
 
@@ -138,15 +109,4 @@ export abstract class Simulation {
         console.log("Loss:", loss);
         return { loss };
     }
-}
-
-async function getLibrary(hash: Buffer): Promise<Cell> {
-    const query = gql`
-        query {
-            get_lib(lib_hash: "${hash.toString("hex").toUpperCase()}")
-        }
-    `;
-
-    const data = await request(DTON_ENDPOINT, query) as any;
-    return Cell.fromBase64(data["get_lib"]);
 }

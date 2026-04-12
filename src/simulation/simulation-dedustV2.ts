@@ -1,8 +1,7 @@
 import { Address, beginCell, toNano, Transaction } from "@ton/core";
 import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
-import { addLibs, createJettonTransferBody, getJettonBalance } from "./simulation-utils";
+import { createJettonTransferBody, getJettonBalance } from "./simulation-utils";
 import { Simulation, StageSimulationInfo } from "./simulation";
-import { libs } from "./dedustV2-libs";
 
 const FEE_BASE = 10000n
 const FORWARD_FEE = toNano(0.25)
@@ -28,7 +27,6 @@ export class DedustV2Simulation extends Simulation {
   }
 
   public static async create(chain: Blockchain, master: Address, pool: Address, amountIn: bigint) {
-    addLibs(chain, libs)
     const assetIn = null // TON
     const poolAccount = (await chain.getContract(pool)).account.account
     if (poolAccount?.storage.state.type !== "active" || !poolAccount.storage.state.state.data)

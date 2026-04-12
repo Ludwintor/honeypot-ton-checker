@@ -1,10 +1,9 @@
 import { Blockchain, BlockchainTransaction, SandboxContract, TreasuryContract } from "@ton/sandbox";
 import { Address, toNano } from "@ton/core";
 import { PoolV2, PtonV2, RouterV2 } from "../stonfi";
-import { addLibs, createJettonTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
+import { createJettonTransferBody, getJettonBalance, getJettonWallet } from "./simulation-utils";
 import { Simulation, StageSimulationInfo } from "./simulation";
 import { divCeil } from "../utils";
-import { libs } from "./stonfiV2-libs";
 
 const FEE_DIVIDER = 10000n;
 const FORWARD_FEE = toNano(0.25);
@@ -30,7 +29,6 @@ export class StonfiV2Simulation extends Simulation {
     }
 
     public static async create(chain: Blockchain, master: Address, pool: Address, amountIn: bigint): Promise<StonfiV2Simulation> {
-        addLibs(chain, libs);
         const poolContract = chain.openContract(new PoolV2(pool));
         const poolData = await poolContract.getPoolData();
         const router = new RouterV2(poolData.routerAddress);

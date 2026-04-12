@@ -1,7 +1,7 @@
-import { Address, toNano } from "@ton/core";
+import { Address, Cell, toNano } from "@ton/core";
 import { TonClient, TonClient4 } from "@ton/ton";
 import { getHttpEndpoint } from "@orbs-network/ton-access";
-import { Blockchain, RemoteBlockchainStorage, wrapTonClient4ForRemote } from "@ton/sandbox";
+import { Blockchain, wrapTonClient4ForRemote } from "@ton/sandbox";
 import { JettonInfo, Risk, Step } from "./types";
 import { DedustPoolFinder, StonfiPoolFinder, Dex, PoolFinder, PoolInfo } from "./dex";
 import { Simulation, DedustSimulation, StonfiV1Simulation, SimulationResult, StageResult, StonfiV2Simulation } from "./simulation";
@@ -10,7 +10,10 @@ import { isKnownWallet } from "./known-contracts";
 import { getJettonInfo } from "./utils";
 import { VoidContractsMeta } from "./meta";
 import { DedustV2Simulation } from "./simulation/simulation-dedustV2";
+import { RemoteBlockchainAutoLibsStorage } from "./sandbox/storage";
+import request, { gql } from "graphql-request";
 
+const DTON_ENDPOINT = "https://dton.io/graphql/";
 const CURRENCY_FORMAT = Intl.NumberFormat("en-US", {
   notation: "compact",
   maximumFractionDigits: 1
@@ -47,9 +50,24 @@ const clientV4 = new TonClient4({
   endpoint: "https://mainnet-v4.tonhubapi.com"
 });
 
+const fetcher = {
+  async fetchLibrary(hash: Buffer): Promise<Cell | null> {
+    const query = gql`
+        query {
+            get_lib(lib_hash: "${hash.toString("hex").toUpperCase()}")
+        }
+    `;
+
+    const data = await request(DTON_ENDPOINT, query) as any;
+    const libBase64 = data["get_lib"] as string | null
+    if (!libBase64)
+      return null
+    return Cell.fromBase64(libBase64);
+  }
+}
 const seqno = (await clientV4.getLastBlock()).last.seqno;
 const chain = await Blockchain.create({
-  storage: new RemoteBlockchainStorage(wrapTonClient4ForRemote(clientV4), seqno),
+  storage: new RemoteBlockchainAutoLibsStorage(wrapTonClient4ForRemote(clientV4), fetcher, seqno),
   meta: VoidContractsMeta
 });
 const poolFinders: PoolFinder[] = [
