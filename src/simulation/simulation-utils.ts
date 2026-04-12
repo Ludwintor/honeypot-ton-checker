@@ -1,4 +1,4 @@
-import { Address, beginCell, Cell, Dictionary, TupleBuilder } from "@ton/core";
+import { Address, beginCell, Cell, TupleBuilder } from "@ton/core";
 import { Blockchain } from "@ton/sandbox";
 
 const PERCENT_PRECISION = 10000n;
@@ -44,23 +44,4 @@ export async function getJettonBalance(chain: Blockchain, jettonWallet: Address)
     } catch {
         return 0n;
     }
-}
-
-const libKey = Dictionary.Keys.Buffer(32);
-const libValue = Dictionary.Values.Cell();
-
-export function addLibs(chain: Blockchain, items: LibItem[]) {
-    const libs = chain.libs?.beginParse().loadDictDirect(libKey, libValue) ??
-        Dictionary.empty(libKey, libValue);
-    const prevLength = libs.size;
-    for (const item of items)
-        if (!libs.has(item.hash))
-            libs.set(item.hash, item.code);
-    if (prevLength !== libs.size)
-        chain.libs = beginCell().storeDictDirect(libs).endCell();
-}
-
-export interface LibItem {
-    hash: Buffer;
-    code: Cell;
 }
