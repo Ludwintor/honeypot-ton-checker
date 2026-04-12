@@ -1,38 +1,42 @@
-import { Factory, MAINNET_FACTORY_ADDR, ReadinessStatus, Asset, PoolType } from "@dedust/sdk";
 import { Address, TonClient } from "@ton/ton";
-import { getJettonInfo } from "../utils";
 import { Dex, PoolFinder, PoolInfo } from "./finder";
 
+const dexToInternal = {
+  "dedust": Dex.DEDUST,
+  "dedust_v3_cpmm": Dex.DEDUST_V2
+} as const
+
 export class DedustPoolFinder extends PoolFinder {
-    public static create(client: TonClient): DedustPoolFinder {
-        return new DedustPoolFinder(client);
-    }
+  public static create(client: TonClient): DedustPoolFinder {
+    return new DedustPoolFinder(client);
+  }
 
-    public async findPools(master: Address): Promise<PoolInfo[]> {
-        const factory = this.client.open(Factory.createFromAddress(MAINNET_FACTORY_ADDR));
-        const vaultJetton = this.client.open(await factory.getJettonVault(master));
-        if (await vaultJetton.getReadinessStatus() !== ReadinessStatus.READY)
-            return [];
-        const assetNative = Asset.native();
-        const assetJetton = Asset.jetton(master);
-        const pool = this.client.open(await factory.getPool(PoolType.VOLATILE, [assetNative, assetJetton]));
-        if (await pool.getReadinessStatus() !== ReadinessStatus.READY)
-            return [];
-        const jettonData = await getJettonInfo(this.client, master);
-        const reserves = await DedustPoolFinder.fetchReservesUsd(pool.address);
-        return [{
-            dex: Dex.DEDUST,
-            name: `DEDUST TON/${jettonData.symbol}`,
-            address: pool.address,
-            reservesUsd: reserves
-        }];
-    }
-
-    private static async fetchReservesUsd(pool: Address): Promise<number> {
-        const request =
-            `https://api.geckoterminal.com/api/v2/search/pools?query=${pool.toString()}&network=ton&page=1`;
-        const response = await fetch(request);
-        const json = (await response.json()) as any;
-        return Number.parseFloat(json["data"][0]["attributes"]["reserve_in_usd"]);
-    }
+  public async findPools(master: Address): Promise<PoolInfo[]> {
+    const request = "https://mainnet.api.dedust.io/v4/api/get_pair_pools"
+    const response = await fetch(request, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        assets: ["native", master.toString()],
+        limit: 10,
+        offset: 0,
+        sort_by: "tvl",
+        sort_direction: "desc"
+      })
+    })
+    const json = (await response.json()) as any
+    const assetsMeta = json["assets_metadata"] as any
+    const jettonTicker = assetsMeta[`jetton:${master.toRawString()}`]["ticker"]
+    const pools = json["pools"] as any[]
+    return pools
+      .filter(x => x["dex"] in dexToInternal)
+      .map(x => ({
+        dex: dexToInternal[x["dex"] as keyof typeof dexToInternal],
+        name: `DEDUST TON/${jettonTicker ?? master.toString()}`,
+        address: Address.parseRaw(x["address"]),
+        reservesUsd: Number.parseFloat(x["tvl_usd"])
+      }) as PoolInfo)
+  }
 }

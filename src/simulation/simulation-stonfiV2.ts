@@ -36,7 +36,7 @@ export class StonfiV2Simulation extends Simulation {
         const router = new RouterV2(poolData.routerAddress);
         const walletIn = await getJettonWallet(chain, router.address, pton.address);
         const walletOut = await getJettonWallet(chain, router.address, master);
-        return new StonfiV2Simulation(chain, master, router, walletIn, 
+        return new StonfiV2Simulation(chain, master, router, walletIn,
             walletOut, poolContract, amountIn
         );
     }
@@ -90,7 +90,7 @@ export class StonfiV2Simulation extends Simulation {
                 payload: swapPayload
             })
         });
-        const actualPayout = StonfiV2Simulation.getActualPayout(result.transactions, 
+        const actualPayout = StonfiV2Simulation.getActualPayout(result.transactions,
             this.pool.address, this.walletIn
         );
         return {
@@ -111,7 +111,7 @@ export class StonfiV2Simulation extends Simulation {
     }
 
     // https://github.com/ston-fi/dex-core/blob/6ab5b1cb3ddb6a37a070f980bae84acbb0197814/contracts/pool/amm.func
-    private static getConstantProductOut(amount: bigint, reserveIn: bigint, reserveOut: bigint, 
+    private static getConstantProductOut(amount: bigint, reserveIn: bigint, reserveOut: bigint,
         lpFee: bigint, protocolFee: bigint
     ): bigint {
         const amountWithFee = amount * (FEE_DIVIDER - lpFee);
