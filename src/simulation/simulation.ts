@@ -37,17 +37,20 @@ export abstract class Simulation {
         let sell: StageResult | null = null;
 
         console.log("---BUY STAGE---------------------");
+        this.chain.now = Math.floor(Date.now() / 1000)
         const buyInfo = await this.simulateBuy(treasury, jettonWallet);
         if (buyInfo !== null) {
             buy = this.processStage(buyInfo);
             console.log("---TRANSFER STAGE---------------------");
             const jettonWalletContract = await this.chain.getContract(jettonWallet);
             const walletSnap = jettonWalletContract.snapshot();
+            this.chain.now += 300
             const transferInfo = await this.simulateTransfer(treasury, jettonWallet);
             jettonWalletContract.loadFrom(walletSnap);
             if (transferInfo !== null) {
                 transfer = this.processStage(transferInfo);
                 console.log("---SELL STAGE---------------------");
+                this.chain.now += 300
                 const sellInfo = await this.simulateSell(treasury, jettonWallet);
                 if (sellInfo !== null)
                     sell = this.processStage(sellInfo);
