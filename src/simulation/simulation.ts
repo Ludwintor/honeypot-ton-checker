@@ -37,7 +37,7 @@ export abstract class Simulation {
         let sell: StageResult | null = null;
 
         console.log("---BUY STAGE---------------------");
-        this.chain.now = Math.floor(Date.now() / 1000)
+        this.chain.now ??= Math.floor(Date.now() / 1000)
         const buyInfo = await this.simulateBuy(treasury, jettonWallet);
         if (buyInfo !== null) {
             buy = this.processStage(buyInfo);
